@@ -78,6 +78,36 @@ class WorkerDB:
                 self.workers.append(worker)
 
 
+    def dec_sort(func):
+        def wrapper(self):
+            sorted_workers = sorted(self.workers, key=lambda worker: worker.get_name())
+            func(self, sorted_workers)
+        return wrapper
+
+    @dec_sort
+    def sorted_by_name(self, sorted_workers):
+        for worker in sorted_workers:
+            print(
+                f"ID: {worker.get_id()}, Name: {worker.get_name()}"
+                f", Department: {worker.get_department()}, Salary: {worker.get_salary()}")
+
+    def dec_search(func):
+        def wrapper(self, name):
+            for worker in self.workers:
+                if worker.get_name() == name:
+                    print(
+                        f"ID: {worker.get_id()}, Name: {worker.get_name()}"
+                        f", Department: {worker.get_department()}, Salary: {worker.get_salary()}")
+                    func(self, name)
+        return wrapper
+
+    @dec_search
+    def search_by_name(self, name):
+        pass
+
+
+
+
 if __name__ == '__main__':
     worker_db = WorkerDB()
 
@@ -86,7 +116,10 @@ if __name__ == '__main__':
         print("2. Edit Worker")
         print("3. Delete Worker")
         print("4. Print Workers")
-        print("5. Exit")
+        print("5.Sorted list")
+        print("6.Search")
+        print("7. Exit")
+
 
         choice = input("Enter choice: ")
 
@@ -118,6 +151,13 @@ if __name__ == '__main__':
                       f", Salary: {worker.get_salary()}")
 
         elif choice == '5':
+            worker_db.sorted_by_name()
+
+        elif choice == '6':
+            name = input("Enter the name: ")
+            worker_db.search_by_name(name)
+
+        elif choice == '7':
             break
         else:
             print("Invalid choice. Please select a valid option.")
