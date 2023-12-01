@@ -1,16 +1,26 @@
 import csv
 
 
+def id_generator(start=1):
+    current_id = start
+    while True:
+        yield current_id
+        current_id += 1
+
+
+id_gen = id_generator()
+
+
 class Worker:
-    def __init__(self, name, surname, department, salary, worker__id):
+    def __init__(self, name, surname, department, salary):
         self.name = name
         self.surname = surname
         self.department = department
         self.salary = salary
-        self.__id = worker__id
+        self._id = next(id_gen)
 
     def get_id(self):
-        return self.__id
+        return self._id
 
     def set_id(self, new_id):
 
@@ -64,18 +74,51 @@ class WorkerDB:
                 return True
 
     def load_from_csv(self, filename):
-        self.workers = []
-        with open(filename, mode='r', newline='') as csv_file:
-            reader = csv.DictReader(csv_file)
-            for row in reader:
-                worker = Worker(
-                    row["Name"],
-                    row["Surname"],
-                    row["Department"],
-                    float(row["Salary"]),
-                    int(row["ID"])
-                )
-                self.workers.append(worker)
+        while True:
+            try:
+                filename = input("Enter the filename: ")
+                self.workers = []
+                with open(filename, mode='r', newline='') as csv_file:
+                    reader = csv.DictReader(csv_file)
+                    for row in reader:
+                        worker = Worker(
+                            row["Name"],
+                            row["Surname"],
+                            row["Department"],
+                            float(row["Salary"]),
+                            # int(row["ID"])
+                        )
+                        self.workers.append(worker)
+                break
+            except FileNotFoundError:
+                print("File not found.")
+
+    def dec_sort(func):
+        def wrapper(self):
+            sorted_workers = sorted(self.workers, key=lambda worker: worker.get_name())
+            func(self, sorted_workers)
+        return wrapper
+
+    @dec_sort
+    def sorted_by_name(self, sorted_workers):
+        for worker in sorted_workers:
+            print(
+                f"ID: {worker.get_id()}, Name: {worker.get_name()}"
+                f", Department: {worker.get_department()}, Salary: {worker.get_salary()}")
+
+    def dec_search(func):
+        def wrapper(self, name):
+            for worker in self.workers:
+                if worker.get_name() == name:
+                    print(
+                        f"ID: {worker.get_id()}, Name: {worker.get_name()}"
+                        f", Department: {worker.get_department()}, Salary: {worker.get_salary()}")
+                    func(self, name)
+        return wrapper
+
+    @dec_search
+    def search_by_name(self, name):
+        pass
 
 
 if __name__ == '__main__':
@@ -86,7 +129,9 @@ if __name__ == '__main__':
         print("2. Edit Worker")
         print("3. Delete Worker")
         print("4. Print Workers")
-        print("5. Exit")
+        print("5.Sorted list")
+        print("6.Search")
+        print("7. Exit")
 
         choice = input("Enter choice: ")
 
@@ -94,9 +139,14 @@ if __name__ == '__main__':
             name = input("Enter worker's name: ")
             surname = input("Enter worker's surname: ")
             department = input("Enter worker's department: ")
-            salary = float(input("Enter worker's salary: "))
-            worker__id = int(input("Enter worker's ID: "))
-            worker = Worker(name, surname, department, salary, worker__id)
+            #salary = float(input("Enter worker's salary: "))
+            while True:
+                try:
+                    salary = float(input("Enter worker's salary: "))
+                    break
+                except ValueError:
+                    print("Invalid value.")
+            worker = Worker(name, surname, department, salary)
             worker_db.add(worker)
 
         elif choice == '2':
@@ -104,8 +154,16 @@ if __name__ == '__main__':
             new_name = input("Enter the new name: ")
             new_surname = input("Enter the new surname: ")
             new_department = input("Enter the new department: ")
-            new_salary = float(input("Enter the new salary: "))
-            new_worker = Worker(new_name, new_surname, new_department, new_salary, worker_id)
+            #new_salary = float(input("Enter the new salary: "))
+            while True:
+                try:
+                    new_salary = float(input("Enter new worker's salary: "))
+                    break
+                except ValueError:
+                    print("Invalid value.")
+
+            new_worker = Worker(new_name, new_surname, new_department, new_salary)
+
             worker_db.edit(worker_id, new_worker)
 
         elif choice == '3':
@@ -118,6 +176,13 @@ if __name__ == '__main__':
                       f", Salary: {worker.get_salary()}")
 
         elif choice == '5':
+            worker_db.sorted_by_name()
+
+        elif choice == '6':
+            name = input("Enter the name: ")
+            worker_db.search_by_name(name)
+
+        elif choice == '7':
             break
         else:
             print("Invalid choice. Please select a valid option.")
