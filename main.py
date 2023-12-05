@@ -1,6 +1,7 @@
 import csv
-
-
+import pandas as pd
+import matplotlib.pyplot as plt
+from collections import Counter
 def id_generator(start=1):
     current_id = start
     while True:
@@ -12,7 +13,7 @@ id_gen = id_generator()
 
 
 class Worker:
-    def __init__(self, name, surname, department, salary):
+    def __init__(self, name, surname, department, salary, _id):
         self.name = name
         self.surname = surname
         self.department = department
@@ -24,7 +25,7 @@ class Worker:
 
     def set_id(self, new_id):
 
-        self.__id = new_id
+        self._id = new_id
 
     def get_name(self):
         return self.name
@@ -62,9 +63,9 @@ class WorkerDB:
     def add(self, worker):
         self.workers.append(worker)
 
-    def edit(self, worker__id, new_worker):
+    def edit(self, worker_id, new_worker):
         for index, worker in enumerate(self.workers):
-            if worker.get_id() == worker__id:
+            if worker.get_id() == worker_id:
                 self.workers[index] = new_worker
 
     def delete(self, worker_id):
@@ -76,7 +77,7 @@ class WorkerDB:
     def load_from_csv(self, filename):
         while True:
             try:
-                filename = input("Enter the filename: ")
+                #file_input = input("Enter the filename: ")
                 self.workers = []
                 with open(filename, mode='r', newline='') as csv_file:
                     reader = csv.DictReader(csv_file)
@@ -86,15 +87,16 @@ class WorkerDB:
                             row["Surname"],
                             row["Department"],
                             float(row["Salary"]),
-                            # int(row["ID"])
+                            int(row["ID"])
                         )
+                        id_gen = id_generator(start=int(row["ID"]) + 1)
                         self.workers.append(worker)
                 break
             except FileNotFoundError:
                 print("File not found.")
 
     def dec_sort(func):
-        def wrapper(self):
+        def wrapper(self, *args):
             sorted_workers = sorted(self.workers, key=lambda worker: worker.get_name())
             func(self, sorted_workers)
         return wrapper
@@ -113,15 +115,22 @@ class WorkerDB:
                     print(
                         f"ID: {worker.get_id()}, Name: {worker.get_name()}"
                         f", Department: {worker.get_department()}, Salary: {worker.get_salary()}")
-                    func(self, name)
+                    result = func(self, name)
+                    return result
+
         return wrapper
 
     @dec_search
     def search_by_name(self, name):
-        pass
+        result = []
+        for worker in self.workers:
+            if worker.get_name() == name:
+                result.append(worker)
+        return result
 
 
 if __name__ == '__main__':
+
     worker_db = WorkerDB()
 
     while True:
@@ -131,7 +140,8 @@ if __name__ == '__main__':
         print("4. Print Workers")
         print("5.Sorted list")
         print("6.Search")
-        print("7. Exit")
+        print("7.Sector for Departments")
+        print("8. Exit")
 
         choice = input("Enter choice: ")
 
@@ -183,9 +193,14 @@ if __name__ == '__main__':
             worker_db.search_by_name(name)
 
         elif choice == '7':
+            departments = [worker.get_department() for worker in worker_db.read()]
+            department_counts = pd.Series(departments).value_counts()
+            plt.pie(department_counts, labels=department_counts.keys(), autopct='%1.1f%%')
+            plt.title('Distribution of Workers by Department')
+            plt.show()
+
+        elif choice == '8':
             break
         else:
             print("Invalid choice. Please select a valid option.")
-
-
 
