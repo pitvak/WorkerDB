@@ -1,7 +1,7 @@
 import csv
-import pandas as pd
-import matplotlib.pyplot as plt
-from collections import Counter
+import unittest
+
+
 def id_generator(start=1):
     current_id = start
     while True:
@@ -129,8 +129,36 @@ class WorkerDB:
         return result
 
 
-if __name__ == '__main__':
+class TestCollection(unittest.TestCase):
+    def setUp(self):
+        self.worker_db = WorkerDB()
 
+    def test_add(self):
+        worker = Worker("GGGg", "Dhhh", "IhhT", "8999", "4")
+        self.worker_db.add(worker)
+        self.assertEqual(len(self.worker_db.workers), 4)
+
+    def test_delete(self):
+        self.worker_db.delete(1)
+        self.assertEqual(len(self.worker_db.workers), 3)
+
+    #def test_edit(self):
+
+        #self.worker_db.edit(1, "olga")
+        #self.assertEqual(len(self.worker_db.workers.name), "olga")
+
+    def test_sort(self):
+        self.worker_db.sorted_by_name("name")
+        first_worker_name = self.worker_db.workers[0].get_name()
+        self.assertEqual(first_worker_name, "John")
+
+    def test_search(self):
+        #self.assertEqual(len(self.worker_db.workers.search_by_name("Jonh")), 1)
+        search_result = self.worker_db.search_by_name("John")
+        self.assertEqual(len(search_result), 1)
+
+if __name__ == '__main__':
+    unittest.main()
     worker_db = WorkerDB()
 
     while True:
@@ -140,8 +168,7 @@ if __name__ == '__main__':
         print("4. Print Workers")
         print("5.Sorted list")
         print("6.Search")
-        print("7.Sector for Departments")
-        print("8. Exit")
+        print("7. Exit")
 
         choice = input("Enter choice: ")
 
@@ -193,13 +220,6 @@ if __name__ == '__main__':
             worker_db.search_by_name(name)
 
         elif choice == '7':
-            departments = [worker.get_department() for worker in worker_db.read()]
-            department_counts = pd.Series(departments).value_counts()
-            plt.pie(department_counts, labels=department_counts.keys(), autopct='%1.1f%%')
-            plt.title('Distribution of Workers by Department')
-            plt.show()
-
-        elif choice == '8':
             break
         else:
             print("Invalid choice. Please select a valid option.")
